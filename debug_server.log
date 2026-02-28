@@ -1,0 +1,2 @@
+MySQL Connection Error: connect ECONNREFUSED 127.0.0.1:3306
+Failed to start server: connect ECONNREFUSED 127.0.0.1:3306
