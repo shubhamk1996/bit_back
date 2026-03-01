@@ -5,7 +5,7 @@ const { createTables } = require('./src/database/schema');
 const seedEmployees = require('./src/database/seedEmployees');
 const initCronJobs = require('./src/cron/taskCron');
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 const startServer = async () => {
   try {
