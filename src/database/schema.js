@@ -31,20 +31,22 @@ const createTables = async () => {
     `);
 
     // Employees table
-    await connection.query(`
-      CREATE TABLE IF NOT EXISTS employees (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT NOT NULL,
-        name VARCHAR(255) NOT NULL,
-        aadhar VARCHAR(255),
-        department VARCHAR(255) NOT NULL,
-        incentive_applicable TINYINT(1) DEFAULT 0,
-        salary DECIMAL(15,2) DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-      )
-    `);
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS employees (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          user_id INT NOT NULL,
+          name VARCHAR(255) NOT NULL,
+          aadhar VARCHAR(255),
+          mobile VARCHAR(20),
+          date_of_joining DATE,
+          department VARCHAR(255) NOT NULL,
+          incentive_applicable TINYINT(1) DEFAULT 0,
+          salary DECIMAL(15,2) DEFAULT 0,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+      `);
 
       // Orders table
   await connection.query(`
@@ -85,9 +87,19 @@ FOREIGN KEY (marketing_person_id) REFERENCES employees(id) ON DELETE SET NULL,
   )
   `);
 
-    // Ensure columns exist for existing tables
-    const [cols] = await connection.query('SHOW COLUMNS FROM orders');
-    const colNames = cols.map(c => c.Field);
+      // Ensure new columns exist in employees table
+      const [empCols] = await connection.query('SHOW COLUMNS FROM employees');
+      const empColNames = empCols.map(c => c.Field);
+      if (!empColNames.includes('mobile')) {
+        await connection.query('ALTER TABLE employees ADD COLUMN mobile VARCHAR(20) AFTER aadhar');
+      }
+      if (!empColNames.includes('date_of_joining')) {
+        await connection.query('ALTER TABLE employees ADD COLUMN date_of_joining DATE AFTER mobile');
+      }
+
+      // Ensure columns exist for existing tables
+      const [cols] = await connection.query('SHOW COLUMNS FROM orders');
+      const colNames = cols.map(c => c.Field);
     
     if (!colNames.includes('tax_amount')) {
       await connection.query('ALTER TABLE orders ADD COLUMN tax_amount DECIMAL(15,2) DEFAULT 0 AFTER amount');
@@ -111,8 +123,17 @@ FOREIGN KEY (marketing_person_id) REFERENCES employees(id) ON DELETE SET NULL,
       await connection.query('ALTER TABLE orders ADD COLUMN dividend_abhay DECIMAL(15,2) DEFAULT 0 AFTER dividend_sumit');
     }
     if (!colNames.includes('dividend_ttd')) {
-      await connection.query('ALTER TABLE orders ADD COLUMN dividend_ttd DECIMAL(15,2) DEFAULT 0 AFTER dividend_abhay');
-    }
+        await connection.query('ALTER TABLE orders ADD COLUMN dividend_ttd DECIMAL(15,2) DEFAULT 0 AFTER dividend_abhay');
+      }
+      if (!colNames.includes('mobile')) {
+        await connection.query('ALTER TABLE orders ADD COLUMN mobile VARCHAR(20) AFTER client_name');
+      }
+      if (!colNames.includes('city')) {
+        await connection.query('ALTER TABLE orders ADD COLUMN city VARCHAR(255) AFTER mobile');
+      }
+      if (!colNames.includes('requirement_snapshot')) {
+        await connection.query('ALTER TABLE orders ADD COLUMN requirement_snapshot VARCHAR(500) AFTER city');
+      }
 
 
 

@@ -73,7 +73,8 @@ exports.getClientById = async (req, res) => {
 // Create new client order (Admin)
 exports.createClient = async (req, res) => {
   try {
-    const { email, password, client_name, company, plan, subplan, payment_date, marketing_person_id, operations_person_id, important_info } = req.body;
+    const { email, password, client_name, company, mobile, city, plan, subplan, payment_date, marketing_person_id, operations_person_id, important_info } = req.body;
+    const requirement_snapshot = req.file ? req.file.filename : null;
     const bcrypt = require('bcryptjs');
 
     const [existing] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
@@ -111,18 +112,18 @@ exports.createClient = async (req, res) => {
     const orderId = await generateOrderId();
 
     const [orderResult] = await pool.query(
-      `INSERT INTO orders (order_id, user_id, client_name, company, plan, subplan, payment_date, upcoming_payment_date,
+      `INSERT INTO orders (order_id, user_id, client_name, mobile, city, company, plan, subplan, payment_date, upcoming_payment_date,
         marketing_person_id, operations_person_id, amount, tax_amount, hosting_charges, gross_margin,
         payments, incentive, office_expenses, extraordinary, net_profit,
-        dividend_sumit, dividend_abhay, dividend_ttd, important_info, website_status, website_link)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [orderId, userId, client_name, company, plan, subplan || null, payDateStr, upcomingDate.toISOString().split('T')[0],
+        dividend_sumit, dividend_abhay, dividend_ttd, important_info, requirement_snapshot, website_status, website_link)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [orderId, userId, client_name, mobile || null, city || null, company, plan, subplan || null, payDateStr, upcomingDate.toISOString().split('T')[0],
         marketing_person_id || null, operations_person_id || null,
         financials.amount, financials.tax_amount, financials.hosting_charges, financials.gross_margin,
         financials.payments, financials.incentive, financials.office_expenses,
         financials.extraordinary, financials.net_profit,
         financials.dividend_sumit, financials.dividend_abhay, financials.dividend_ttd, 
-        important_info || null, req.body.website_status || 'In Progress', req.body.website_link || null]
+        important_info || null, requirement_snapshot, req.body.website_status || 'In Progress', req.body.website_link || null]
     );
 
     const tasks = generateTasksForOrder(orderResult.insertId, payDateStr, plan, subplan);
@@ -143,7 +144,8 @@ exports.createClient = async (req, res) => {
 // Update client order
 exports.updateClient = async (req, res) => {
   try {
-    const { client_name, company, plan, subplan, payment_date, marketing_person_id, operations_person_id, important_info } = req.body;
+    const { client_name, company, mobile, city, plan, subplan, payment_date, marketing_person_id, operations_person_id, important_info } = req.body;
+    const requirement_snapshot = req.file ? req.file.filename : undefined;
     let amount = 21250;
     if (plan === 'marketing') {
       amount = subplan === 'ultimate' ? 42500 : 21250;
@@ -167,20 +169,24 @@ exports.updateClient = async (req, res) => {
     const upcomingDate = new Date(payDate);
     upcomingDate.setFullYear(upcomingDate.getFullYear() + 1);
 
+    const snapshotClause = requirement_snapshot !== undefined ? ', requirement_snapshot=?' : '';
+    const snapshotVal = requirement_snapshot !== undefined ? [requirement_snapshot] : [];
+
     await pool.query(
-      `UPDATE orders SET client_name=?, company=?, plan=?, subplan=?, payment_date=?, upcoming_payment_date=?,
+      `UPDATE orders SET client_name=?, mobile=?, city=?, company=?, plan=?, subplan=?, payment_date=?, upcoming_payment_date=?,
         marketing_person_id=?, operations_person_id=?, amount=?, tax_amount=?, hosting_charges=?,
         gross_margin=?, payments=?, incentive=?, office_expenses=?, extraordinary=?,
         net_profit=?, dividend_sumit=?, dividend_abhay=?, dividend_ttd=?, important_info=?,
-        website_status=?, website_link=?
+        website_status=?, website_link=?${snapshotClause}
        WHERE id=?`,
-      [client_name, company, plan, subplan || null, payDateStr, upcomingDate.toISOString().split('T')[0],
+      [client_name, mobile || null, city || null, company, plan, subplan || null, payDateStr, upcomingDate.toISOString().split('T')[0],
         marketing_person_id || null, operations_person_id || null,
         financials.amount, financials.tax_amount, financials.hosting_charges, financials.gross_margin,
         financials.payments, financials.incentive, financials.office_expenses,
         financials.extraordinary, financials.net_profit,
         financials.dividend_sumit, financials.dividend_abhay, financials.dividend_ttd,
         important_info || null, req.body.website_status || 'In Progress', req.body.website_link || null,
+        ...snapshotVal,
         req.params.id]
     );
     res.json({ success: true, message: 'Client updated successfully' });

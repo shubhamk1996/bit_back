@@ -17,7 +17,8 @@ const generateTokens = (userId, roleId) => {
 // Client Signup
 exports.signup = async (req, res) => {
   try {
-    const { email, password, client_name, company, plan, subplan, payment_date, marketing_person_id, operations_person_id, important_info } = req.body;
+    const { email, password, client_name, company, mobile, city, plan, subplan, payment_date, marketing_person_id, operations_person_id, important_info } = req.body;
+    const requirement_snapshot = req.file ? req.file.filename : null;
   
     // Check existing user
     const [existing] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
@@ -67,17 +68,17 @@ exports.signup = async (req, res) => {
   
     // Create order
     const [orderResult] = await pool.query(
-      `INSERT INTO orders (order_id, user_id, client_name, company, plan, subplan, payment_date, upcoming_payment_date,
+      `INSERT INTO orders (order_id, user_id, client_name, mobile, city, company, plan, subplan, payment_date, upcoming_payment_date,
         marketing_person_id, operations_person_id, amount, tax_amount, hosting_charges, gross_margin,
         payments, incentive, office_expenses, extraordinary, net_profit,
-        dividend_sumit, dividend_abhay, dividend_ttd, important_info)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [orderId, userId, client_name, company, plan, subplan || null, payDateStr, upcomingDate.toISOString().split('T')[0],
+        dividend_sumit, dividend_abhay, dividend_ttd, important_info, requirement_snapshot)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [orderId, userId, client_name, mobile || null, city || null, company, plan, subplan || null, payDateStr, upcomingDate.toISOString().split('T')[0],
         marketing_person_id || null, operations_person_id || null,
         financials.amount, financials.tax_amount, financials.hosting_charges, financials.gross_margin,
         financials.payments, financials.incentive, financials.office_expenses,
         financials.extraordinary, financials.net_profit,
-        financials.dividend_sumit, financials.dividend_abhay, financials.dividend_ttd, important_info || null]
+        financials.dividend_sumit, financials.dividend_abhay, financials.dividend_ttd, important_info || null, requirement_snapshot]
     );
   
     // Generate tasks

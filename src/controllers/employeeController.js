@@ -33,7 +33,7 @@ exports.getEmployeesByDepartment = async (req, res) => {
 // Create employee
 exports.createEmployee = async (req, res) => {
   try {
-    const { name, aadhar, department, incentive_applicable, email, password, salary } = req.body;
+    const { name, aadhar, mobile, date_of_joining, department, incentive_applicable, email, password, salary } = req.body;
     const [existing] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
     if (existing.length > 0) {
       return res.status(409).json({ success: false, message: 'Email already registered' });
@@ -44,8 +44,8 @@ exports.createEmployee = async (req, res) => {
       [email, hashedPassword]
     );
     const [empResult] = await pool.query(
-      'INSERT INTO employees (user_id, name, aadhar, department, incentive_applicable, salary) VALUES (?, ?, ?, ?, ?, ?)',
-      [userResult.insertId, name, aadhar, department, (department === 'Sales' || department === 'Marketing') ? (incentive_applicable ? 1 : 0) : 0, salary || 0]
+      'INSERT INTO employees (user_id, name, aadhar, mobile, date_of_joining, department, incentive_applicable, salary) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [userResult.insertId, name, aadhar, mobile || null, date_of_joining || null, department, (department === 'Sales' || department === 'Marketing') ? (incentive_applicable ? 1 : 0) : 0, salary || 0]
     );
     res.status(201).json({ success: true, message: 'Employee created successfully', data: { id: empResult.insertId } });
   } catch (error) {
@@ -57,14 +57,14 @@ exports.createEmployee = async (req, res) => {
 // Update employee
 exports.updateEmployee = async (req, res) => {
   try {
-    const { name, aadhar, department, incentive_applicable, email, password, salary } = req.body;
+    const { name, aadhar, mobile, date_of_joining, department, incentive_applicable, email, password, salary } = req.body;
     const { id } = req.params;
     const [emp] = await pool.query('SELECT * FROM employees WHERE id = ?', [id]);
     if (emp.length === 0) return res.status(404).json({ success: false, message: 'Employee not found' });
 
     await pool.query(
-      'UPDATE employees SET name=?, aadhar=?, department=?, incentive_applicable=?, salary=? WHERE id=?',
-      [name, aadhar, department, (department === 'Sales' || department === 'Marketing') ? (incentive_applicable ? 1 : 0) : 0, salary || 0, id]
+      'UPDATE employees SET name=?, aadhar=?, mobile=?, date_of_joining=?, department=?, incentive_applicable=?, salary=? WHERE id=?',
+      [name, aadhar, mobile || null, date_of_joining || null, department, (department === 'Sales' || department === 'Marketing') ? (incentive_applicable ? 1 : 0) : 0, salary || 0, id]
     );
     if (email) await pool.query('UPDATE users SET email = ? WHERE id = ?', [email, emp[0].user_id]);
     if (password) {
