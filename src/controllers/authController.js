@@ -50,12 +50,12 @@ exports.signup = async (req, res) => {
         'SELECT COALESCE(SUM(amount), 0) as total_sales FROM orders WHERE marketing_person_id = ?',
         [marketing_person_id]
       );
-      if (salesResult[0].total_sales >= 100000) {
+      if (salesResult[0].total_sales >= 200000) {
         hasIncentive = true;
       }
     }
 
-    const financials = calculateFinancials(amount, hasIncentive);
+    const financials = calculateFinancials(amount, hasIncentive, plan, subplan);
   
     // Calculate upcoming payment date (1 year after payment date)
     const payDateStr = payment_date || new Date().toISOString().split('T')[0];

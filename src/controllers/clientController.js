@@ -99,12 +99,12 @@ exports.createClient = async (req, res) => {
         'SELECT COALESCE(SUM(amount), 0) as total_sales FROM orders WHERE marketing_person_id = ?',
         [marketing_person_id]
       );
-      if (salesResult[0].total_sales >= 100000) {
+      if (salesResult[0].total_sales >= 200000) {
         hasIncentive = true;
       }
     }
 
-    const financials = calculateFinancials(amount, hasIncentive);
+    const financials = calculateFinancials(amount, hasIncentive, plan, subplan);
     const payDateStr = payment_date || new Date().toISOString().split('T')[0];
     const payDate = new Date(payDateStr + 'T00:00:00');
     const upcomingDate = new Date(payDate);
@@ -158,12 +158,12 @@ exports.updateClient = async (req, res) => {
         'SELECT COALESCE(SUM(amount), 0) as total_sales FROM orders WHERE marketing_person_id = ? AND id != ?',
         [marketing_person_id, req.params.id]
       );
-      if (salesResult[0].total_sales >= 100000) {
+      if (salesResult[0].total_sales >= 200000) {
         hasIncentive = true;
       }
     }
 
-    const financials = calculateFinancials(amount, hasIncentive);
+    const financials = calculateFinancials(amount, hasIncentive, plan, subplan);
     const payDateStr = payment_date || new Date().toISOString().split('T')[0];
     const payDate = new Date(payDateStr + 'T00:00:00');
     const upcomingDate = new Date(payDate);

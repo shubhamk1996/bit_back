@@ -1,16 +1,33 @@
 // backend/src/utils/calculateFinancials.js - Calculate all financial breakdowns for an order
-const calculateFinancials = (totalAmount, hasIncentive = false) => {
+// Product-based fixed incentive amounts (upto 15% policy)
+const INCENTIVE_WEBSITE = 3000;       // Rs 3000 per website plan
+const INCENTIVE_MARKETING_24 = 3000;  // Rs 3000 for marketing 24-card (starter/basic)
+const INCENTIVE_MARKETING_48 = 6000;  // Rs 6000 for marketing 48-card (ultimate)
+
+const calculateFinancials = (totalAmount, hasIncentive = false, plan = null, subplan = null) => {
   const total = parseFloat(totalAmount);
-  
+
   // Tax is already included in totalAmount (18% GST)
   // Formula: Base + (Base * 0.18) = Total => Base * 1.18 = Total => Base = Total / 1.18
   const baseAmount = total / 1.18;
   const tax_amount = total - baseAmount;
-  
+
+  // Product-based fixed incentive (applied only after Rs 2,00,000 threshold)
+  let incentive = 0;
+  if (hasIncentive) {
+    if (plan === 'website') {
+      incentive = INCENTIVE_WEBSITE;
+    } else if (plan === 'marketing') {
+      incentive = (subplan === 'ultimate') ? INCENTIVE_MARKETING_48 : INCENTIVE_MARKETING_24;
+    } else {
+      // fallback: use website amount for any unrecognized plan
+      incentive = INCENTIVE_WEBSITE;
+    }
+  }
+
   // Internal calculations are done on the base amount (revenue excluding tax)
   const hosting_charges = baseAmount * 0.50;
   const payments = baseAmount * 0.16;
-  const incentive = hasIncentive ? (baseAmount * 0.08) : 0;
   const office_expenses = baseAmount * 0.04;
   const extraordinary = baseAmount * 0.04;
   

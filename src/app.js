@@ -22,7 +22,8 @@ app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 
 const allowedOrigins = [
   'https://app.bitsystem.in',
-  'http://localhost:3001'
+  'http://localhost:3001',
+  'http://localhost:3000'
 ];
 
 const corsOptions = {

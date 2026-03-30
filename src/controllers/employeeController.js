@@ -205,7 +205,7 @@ exports.getEmployeeDashboard = async (req, res) => {
 
       const totalRevenue = orders.reduce((sum, o) => sum + parseFloat(o.amount), 0);
       const totalIncentive = orders.reduce((sum, o) => sum + parseFloat(o.incentive), 0);
-      const incentiveEligible = totalRevenue >= 100000;
+      const incentiveEligible = totalRevenue >= 200000;
 
       res.json({
         success: true,
@@ -216,7 +216,7 @@ exports.getEmployeeDashboard = async (req, res) => {
           progressBar: {
             salary: parseFloat(employee.salary),
             incentive: incentiveEligible ? totalIncentive : 0,
-            revenueToUnlock: 100000, currentRevenue: totalRevenue
+            revenueToUnlock: 200000, currentRevenue: totalRevenue
           }
         }
       });
